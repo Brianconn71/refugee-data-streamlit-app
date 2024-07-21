@@ -66,11 +66,63 @@ def page_overview():
 def page_country_analysis():
     st.subheader("Country Analysis")
     # data viz code below
+    
+    country = st.selectbox("Select Country", data['Country of asylum'].unique())
+    
+    country_data = data[data['Country of asylum'] == country]
+    
+    country_data_long = pd.melt(country_data, id_vars=['Year'],
+                                value_vars=['Recognized decisions', 'Rejected decisions'],
+                                var_name='Decision Type', value_name='Count')
+    
+    fig_grouped_bar = px.bar(country_data_long, x='Year', y='Count', color='Decision Type', barmode='group',
+                             title=f"Asylum decisions for {country} over the years",
+                             labels={'Count': 'Number of Decisions'},
+                             color_discrete_sequence=px.colors.sequential.YlOrRd)
+    
+    fig_grouped_bar.update_layout(height=400, showlegend=True)
+    st.plotly_chart(fig_grouped_bar)
+    
+    total_decisions = country_data[
+        ['Recognized decisions', 'Rejected decisions', 'Total decisions']
+    ].sum().reset_index()
+    total_decisions.columns = ['Decision Type', 'Count']
+    
+    fig_horizontal_bar = px.bar(total_decisions, x='Count', y='Decision Type',
+                                orientation='h',
+                                title=f"Total Asylum Decisions for {country}",
+                                color="Decision Type",
+                                color_discrete_sequence=px.colors.sequential.YlOrRd)
+    
+    fig_horizontal_bar.update_layout(height=300, showlegend=False)
+    st.plotly_chart(fig_horizontal_bar)
 
 # Third Page setup - choropleth map
 def page_choropleth():
     st.subheader("Global Distribution of asylum decisions")
     # data viz code below
+    year = st.selectbox("Select Year", sorted(data['Year'].unique()), key='year_select')
+    
+    year_data = data[data['Year'] == year]
+    
+    asylum_counts = get_asylum_counts(year_data, 'Country of asylum')
+    
+    st.subheader(f"Global Distribution of Asylum Decisions in {year}")
+    
+    fig = px.choropleth(asylum_counts, locations="Country of asylum",
+                        locationmode="country names",
+                        color="Total decisions",
+                        hover_name="Country of asylum",
+                        color_continuous_scale=px.colors.sequential.YlOrBr)
+    
+    fig.update_layout(height=500)
+    st.plotly_chart(fig)
+    
+    st.subheader(f"Asylum decisions by country in {year}")
+    sorted_asylum_counts = asylum_counts.sort_values(by='Total decisions',
+                                                     ascending=False)
+    
+    st.dataframe(sorted_asylum_counts)
 
 
 # Main app with navigation
