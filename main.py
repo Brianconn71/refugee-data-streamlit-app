@@ -6,6 +6,7 @@ def page_overview():
     st.subheader("Global Asylum Decisions by Year Range (Choose Range)")
     # data viz code below
 
+
 # Second Page setup - country specific with barchart
 def page_country_analysis():
     st.subheader("Country Analysis")
